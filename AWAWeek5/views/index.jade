@@ -1,0 +1,203 @@
+extends layout
+
+block content
+  html
+    head
+      link(rel="stylesheet", href="https://fonts.googleapis.com/icon?family=Material+Icons")
+      link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css")
+    body
+      nav 
+        div(class="nav-wrapper")
+          a(class="title", style="font-size:300%;") Recipe
+            ul(id="nav-mobile", class="right")
+              li 
+                div
+                  input(id="searchRecipe", type="search", placeholder="Search...")
+      div(class="container")
+        div(class="col")
+          h2(id="name-field")
+          h2 Ingredients
+          p(id="ingredients-field")
+          h2 Instructions
+          p(id="instructions-field")
+          br
+          div
+            img(id="images", src="#")
+          br
+        div(class="col")
+          p Name
+            br
+            input(type="text", id="name-text")
+            br
+          h4 Ingredients
+            br
+            textarea(id="ingredients-text")
+            br
+            button(id="add-ingredient", type="button", class="btn") Add Ingredient
+            br
+          h4 Instructions
+            br
+            textarea(id="instructions-text")
+            br
+            button(id="add-instruction", type="button", class="btn") Add instruction
+            br
+          form(action="#", enctype="multipart/form-data", method="post")
+            input(id="image-input", type="file", accept="image/*", multiple)
+          br
+          div(id="container-box")
+          br
+          button(id="submit",type="submit", class="btn") Submit
+      script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js")
+      script(type="text/javascript").
+              const nameText = document.getElementById("name-field");
+              const ingText = document.getElementById("ingredients-field");
+              const insText = document.getElementById("instructions-field");
+              const ingBTN = document.getElementById("add-ingredient");
+              const insBTN = document.getElementById("add-instruction");
+              const submitBTN = document.getElementById("submit");
+              const name = document.getElementById("name-text");
+              const inputImage = document.getElementById("image-input");
+              const searchNameField = document.querySelector("#searchRecipe");
+              const boxContainer = document.getElementById("container-box");
+              const image = document.getElementById("images");
+
+              newRecipe = {
+                name: "",
+                ingredients: [],
+                instructions: [],
+                diets: [],
+              };
+
+              function addCheckbox(data) {
+                for(let i = 0; i<data.length; i++) {
+                  var checkbox = document.createElement("input");
+                  checkbox.type = "checkbox";
+                  checkbox.id = data[i]._id;
+                  checkbox.name = "check";
+
+                  var label = document.createElement("label");
+                  label.id = `${data[i].name}-label`
+
+                  var span = document.createElement("span");
+                  span.id = `${data[i].name}-span`
+                  span.htmlFor = data[i].name;
+                  span.appendChild(document.createTextNode(data[i].name));
+
+                  var br = document.createElement("br")
+
+                  label.appendChild(checkbox);
+                  label.appendChild(span);
+                  boxContainer.appendChild(label);
+                  boxContainer.appendChild(br);
+                }
+              }
+
+              function selectedCheckboxes() {
+                let diet = document.querySelectorAll('input[name="check"]:checked');
+                diet.forEach((checkbox) => {
+                  newRecipe.diets.push(checkbox.id)
+                })
+              }
+
+              async function showDiet() {
+                await fetch(`http://localhost:3000/diet`, {
+                  method: "GET",
+                  headers: {
+                    "Content-type": "application/json"
+                  },
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                  addCheckbox(data);
+                }).catch(err=>console.log(err));
+              };
+              
+              showDiet();
+
+              async function getImg(img) {
+                console.log(img)
+                await fetch(`http://localhost:3000/images/${img}`, {
+                  method: "GET",
+                  headers: {
+                    "Content-Disposition": "inline",
+                    "Content-Type": "image/png",
+                  },
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                  console.log("Testi2")
+                  console.log(data)
+                  console.log(data.buffer.data);
+                  image.src = `data:${json.mimetype};base64${data.buffer.toString('base64')}`
+                  console.log(image.src);
+                  image.outerHTML;
+                }).catch(err=>console.log(err));
+              }
+
+              async function showRecipe() {
+                await fetch(`http://localhost:3000/recipe/${searchNameField.value}`, {
+                  method: "GET",
+                  headers: {
+                    "Content-type": "application/json"
+                  },
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                  nameText.innerHTML = data.name;
+                  ingText.innerHTML = data.ingredients;
+                  insText.innerHTML = data.instructions;
+                  console.log(data.images);
+                  getImg(data.images);
+                }).catch(err=>console.log(err));
+              };
+
+              searchNameField.addEventListener("keyup", function(e) { 
+                if (e.keyCode === 13) {
+                  showRecipe();
+                } else {
+                  return
+                }
+              })
+
+
+              ingBTN.addEventListener("click", () => {
+                const ingredient = document.getElementById("ingredients-text").value;
+                newRecipe.ingredients.push(ingredient);
+              })
+
+              insBTN.addEventListener("click", () => {
+                const instructions = document.getElementById("instructions-text").value;
+                newRecipe.instructions.push(instructions);
+              })
+
+              submitBTN.addEventListener("click", async () => {
+                newRecipe.name = name.value;
+                selectedCheckboxes();
+                await fetch("http://localhost:3000/recipe/", {
+                  method: "POST",
+                  headers: {
+                    "Content-type": "application/json"
+                  },
+                  body: JSON.stringify(newRecipe),
+                })
+                .then((res) => res.json()).catch(err=>console.log(err));
+
+                let formData = new FormData();
+                formData.set("img", name.value);
+                for(let i of inputImage.files) {
+                  formData.append("images", i);
+                }
+                await Img(formData);
+                //console.log(formData.get("images"));
+              });
+
+              async function Img(formData) {
+                await fetch("http://localhost:3000/images", {
+                  method: "POST",
+                  body: formData,
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                  console.log(data);
+                }).catch(err=>console.log(err))
+              }

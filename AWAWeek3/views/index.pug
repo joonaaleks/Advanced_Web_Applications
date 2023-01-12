@@ -1,0 +1,80 @@
+extends layout
+block content
+    h1 My todos
+    p Name
+    input(id="input-name", type="text", name="name")
+    p Todos
+    input(id="input-task", type="text", name="todos")
+    p
+    button.btn.btn-primary(id="submit-data", type="submit", name="submit") Submit
+    p(id="textfield")
+    p Search user
+    input(id="search-name", type="text", name="search")
+    p 
+    button.btn.btn-primary(id="search", type="submit", name="submitUser") Search
+    p(id="userfield")
+    span(id="delete-user")
+    script(type="text/javascript").
+        const submitBTN = document.getElementById("submit-data");
+        const searchBTN = document.getElementById("search");
+        const userfield = document.getElementById("userfield");
+        var searchName = document.getElementById("search-name");
+
+        function button_click(){
+            fetch(`http://localhost:3000/user/${searchName.value}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-type": "application/json"
+                },
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                userfield.innerHTML = data;
+            })
+            document.getElementById("delete-user").style.visibility = 'hidden';
+        };
+
+        function delete_user(){
+            document.getElementById("delete-user").innerHTML = '<button onclick="button_click()">Delete user</button>';
+        };
+
+        submitBTN.addEventListener("click", () => {
+            var name = document.getElementById("input-name");
+            var todo = document.getElementById("input-task");
+            const textfield = document.getElementById("textfield");
+
+            fetch("http://localhost:3000/todo", {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: `{ "name": "${name.value}",
+            "todos": "${todo.value}" }`,
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                textfield.innerHTML = data;
+            }).catch(err=>console.log(err));
+        });
+        
+
+        searchBTN.addEventListener("click", () => {
+
+            fetch(`http://localhost:3000/user/${searchName.value}`, {
+                method: "GET",
+                headers: {
+                    "Content-type": "application/json"
+                },
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.name) {
+                    userfield.innerHTML = `{ "name": "${data.name}",
+                                "todos": "${data.todos}" }`;
+                    delete_user();
+                } else {
+                    userfield.innerHTML = data;
+                }
+            }).catch(err=>console.log(err));
+        })
+    

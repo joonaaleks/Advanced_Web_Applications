@@ -1,0 +1,122 @@
+extends layout
+
+block content
+  html
+    head
+      link(rel="stylesheet", href="https://fonts.googleapis.com/icon?family=Material+Icons")
+      link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css")
+    body
+      nav 
+        div(class="nav-wrapper")
+          a(class="title", style="font-size:300%;") Recipe
+          ul(id="nav-mobile", class="right")
+      div(class="container")
+        div(class="col")
+          h2(id="name-field")
+          h2 Ingredients
+          p(id="ingredients-field")
+          h2 Instructions
+          p(id="instructions-field")
+          br
+        div(class="col")
+          p Name
+            br
+            input(type="text", id="name-text")
+            br
+          h4 Ingredients
+            br
+            textarea(id="ingredients-text")
+            br
+            button(id="add-ingredient", type="button", class="btn") Add Ingredient
+            br
+          h4 Instructions
+            br
+            textarea(id="instructions-text")
+            br
+            button(id="add-instruction", type="button", class="btn") Add instruction
+            br
+            input(id="image-input", type="file", accept="image/*")
+            br
+            button(id="submit",type="submit", class="btn") Submit
+      script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js")
+      script(type="text/javascript").
+              const nameText = document.getElementById("name-field");
+              const ingText = document.getElementById("ingredients-field");
+              const insText = document.getElementById("instructions-field");
+              const ingBTN = document.getElementById("add-ingredient");
+              const insBTN = document.getElementById("add-instruction");
+              const submitBTN = document.getElementById("submit");
+              const name = document.getElementById("name-text");
+              const inputImage = document.getElementById("image-input");
+
+              newRecipe = {
+                name: "",
+                ingredients: [],
+                instructions: [],
+              };
+
+              async function showRecipe() {
+                await fetch(`http://localhost:3000/recipe/Water`, {
+                  method: "GET",
+                  headers: {
+                    "Content-type": "application/json"
+                  },
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                  console.log(data);
+                  nameText.innerHTML = data.name;
+                  ingText.innerHTML = data.ingredients;
+                  insText.innerHTML = data.instructions;
+                }).catch(err=>console.log(err));
+              };
+
+              showRecipe();
+
+              ingBTN.addEventListener("click", () => {
+                const ingredient = document.getElementById("ingredients-text").value;
+                newRecipe.ingredients.push(ingredient);
+              })
+
+              insBTN.addEventListener("click", () => {
+                const instructions = document.getElementById("instructions-text").value;
+                newRecipe.instructions.push(instructions);
+              })
+
+              submitBTN.addEventListener("click", async () => {
+                newRecipe.name = name.value;
+                await fetch("http://localhost:3000/recipe/", {
+                  method: "POST",
+                  headers: {
+                    "Content-type": "application/json"
+                  },
+                  body: JSON.stringify(newRecipe),
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                  nameText.innerHTML = data.name;
+                  ingText.innerHTML = data.ingredients;
+                  insText.innerHTML = data.instructions;
+                })
+
+                let formData = new FormData();
+                for(let i of inputImage.files) {
+                  formData.append("images", i);
+                }
+                await Img(formData);
+              });
+
+              async function Img(formData) {
+                await fetch("http://localhost:3000/images", {
+                  method: "POST",
+                  body: formData,
+                })
+                .then((res) => res.json())
+                .then((data) => {
+                  console.log(data);
+                })
+              }
+
+          
+    
+
