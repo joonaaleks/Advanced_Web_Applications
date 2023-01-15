@@ -30,8 +30,8 @@ app.get("/echo/:id", (req, res) => {
 });
 
 app.post("/sum", (req, res) => {
-    var sum = 0;
-    for (var key in req.body.numbers) {
+    let sum = 0;
+    for (let key in req.body.numbers) {
         if(req.body.numbers.hasOwnProperty(key)) {
             sum += req.body.numbers[key];
         }

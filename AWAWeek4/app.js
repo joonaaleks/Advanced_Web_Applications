@@ -11,16 +11,16 @@ https://developer.mozilla.org/en-US/docs/Web/API/FormData
 https://dmitripavlutin.com/javascript-fetch-async-await/
 */
 
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+let createError = require('http-errors');
+let express = require('express');
+let path = require('path');
+let cookieParser = require('cookie-parser');
+let logger = require('morgan');
 
-var indexRouter = require('./routes/index');
-var recipesRouter = require('./routes/recipes');
+let indexRouter = require('./routes/index');
+let recipesRouter = require('./routes/recipes');
 
-var app = express();
+let app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
